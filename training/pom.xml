@@ -231,6 +231,37 @@
         </dependency>
 
 
+        <!-- https://mvnrepository.com/artifact/io.fabric8/kubernetes-client -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+            <version>4.0.0</version><!-- 对应k8s的1.9版本-->
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.github.docker-java/docker-java -->
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/com.imwyh/harbor-java-client -->
+        <!--<dependency>
+            <groupId>com.imwyh</groupId>
+            <artifactId>harbor-java-client</artifactId>
+            <version>0.0.1</version>
+        </dependency>-->
+
+
+        <!--
+
+        <dependency>
+            <groupId>com.github.utils-java</groupId>
+            <artifactId>utils-java</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        -->
 	</dependencies>
 
 	<build>

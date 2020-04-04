@@ -1,33 +1,23 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" :inline="true" label-width="68px">
-      <el-form-item label="岗位编码" prop="postCode">
+      <el-form-item label="课程名称" prop="courseName">
         <el-input
-          v-model="queryParams.postCode"
-          placeholder="请输入岗位编码"
+          v-model="queryParams.courseName"
+          placeholder="请输入课程名称"
           clearable
           size="small"
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="岗位名称" prop="postName">
+      <el-form-item label="课程编号" prop="courseSn">
         <el-input
-          v-model="queryParams.postName"
-          placeholder="请输入岗位名称"
+          v-model="queryParams.courseSn"
+          placeholder="请输入课程编号"
           clearable
           size="small"
           @keyup.enter.native="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="岗位状态" clearable size="small">
-          <el-option
-            v-for="dict in statusOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
-          />
-        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -42,7 +32,7 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-          v-hasPermi="['system:post:add']"
+          v-hasPermi="['course:course:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -52,7 +42,7 @@
           size="mini"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['system:post:edit']"
+          v-hasPermi="['course:course:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -62,7 +52,7 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['system:post:remove']"
+          v-hasPermi="['course:course:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -71,23 +61,22 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-          v-hasPermi="['system:post:export']"
+          v-hasPermi="['course:course:export']"
         >导出</el-button>
       </el-col>
     </el-row>
 
-    <el-table v-loading="loading" :data="postList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="courseList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="岗位编号" align="center" prop="postId" />
-      <el-table-column label="岗位编码" align="center" prop="postCode" />
-      <el-table-column label="岗位名称" align="center" prop="postName" />
-      <el-table-column label="岗位排序" align="center" prop="postSort" />
-      <el-table-column label="状态" align="center" prop="status" :formatter="statusFormat" />
-      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createTime) }}</span>
-        </template>
-      </el-table-column>
+      <el-table-column label="主键ID" align="center" prop="id" />
+      <el-table-column label="课程名称" align="center" prop="courseName" />
+      <el-table-column label="课程编号" align="center" prop="courseSn" />
+      <el-table-column label="课程图片" align="center" prop="courseLogo" />
+      <el-table-column label="课程类型" align="center" prop="typeName" />
+      <el-table-column label="课程简介" align="center" prop="courseIntor" />
+      <el-table-column label="学分" align="center" prop="score" />
+      <el-table-column label="序号" align="center" prop="sort" />
+      <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -95,14 +84,14 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:post:edit']"
+            v-hasPermi="['course:course:edit']"
           >修改</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            v-hasPermi="['system:post:remove']"
+            v-hasPermi="['course:course:remove']"
           >删除</el-button>
         </template>
       </el-table-column>
@@ -116,30 +105,38 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改岗位对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px">
+    <!-- 添加或修改课程实体类对话框 -->
+    <el-dialog :title="title" :visible.sync="open" width="900px">
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="岗位名称" prop="postName">
-          <el-input v-model="form.postName" placeholder="请输入岗位名称" />
+        <el-form-item label="课程名称" prop="courseName">
+          <el-input v-model="form.courseName" placeholder="请输入课程名称" />
         </el-form-item>
-        <el-form-item label="岗位编码" prop="postCode">
-          <el-input v-model="form.postCode" placeholder="请输入编码名称" />
+        <el-form-item label="课程编号" prop="courseSn">
+          <el-input v-model="form.courseSn" placeholder="请输入课程编号" />
         </el-form-item>
-        <el-form-item label="岗位顺序" prop="postSort">
-          <el-input-number v-model="form.postSort" controls-position="right" :min="0" />
+        <el-form-item label="课程图片" prop="courseLogo">
+          <el-input v-model="form.courseLogo" placeholder="请输入课程图片路径" />
         </el-form-item>
-        <el-form-item label="岗位状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio
-              v-for="dict in statusOptions"
-              :key="dict.dictValue"
-              :label="dict.dictValue"
-            >{{dict.dictLabel}}</el-radio>
-          </el-radio-group>
+        <el-form-item label="课程类型" prop="courseTypeId">
+          <el-select v-model="form.courseTypeId" placeholder="请选择课程类型">
+            <el-option
+              v-for="item in typeOptions"
+              :key="item.id"
+              :label="item.typeName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+        <el-form-item label="课程简介" prop="courseIntor">
+          <el-input v-model="form.courseIntor"  type="textarea" placeholder="请输入内容" />
         </el-form-item>
+        <el-form-item label="学分" prop="score">
+          <el-input-number v-model="form.score" controls-position="right" :min="0" />
+        </el-form-item>
+        <el-form-item label="序号" prop="sort">
+          <el-input-number v-model="form.sort" controls-position="right" :min="0" />
+        </el-form-item>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -150,10 +147,10 @@
 </template>
 
 <script>
-import { listPost, getPost, delPost, addPost, updatePost, exportPost } from "@/api/system/post";
-
+import { listCourse, getCourse, delCourse, addCourse, updateCourse, exportCourse } from "@/api/course/course";
+import {getTypeList } from "@/api/course/type";
 export default {
-  name: "Post",
+  name: "Course",
   data() {
     return {
       // 遮罩层
@@ -166,57 +163,40 @@ export default {
       multiple: true,
       // 总条数
       total: 0,
-      // 岗位表格数据
-      postList: [],
+      // 课程实体类表格数据
+      courseList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
       open: false,
-      // 状态数据字典
-      statusOptions: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        postCode: undefined,
-        postName: undefined,
-        status: undefined
+        courseName: undefined,
+        courseSn: undefined,
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        postName: [
-          { required: true, message: "岗位名称不能为空", trigger: "blur" }
-        ],
-        postCode: [
-          { required: true, message: "岗位编码不能为空", trigger: "blur" }
-        ],
-        postSort: [
-          { required: true, message: "岗位顺序不能为空", trigger: "blur" }
-        ]
-      }
+      },
+      //类型选项
+      typeOptions:[]
     };
   },
   created() {
     this.getList();
-    this.getDicts("sys_normal_disable").then(response => {
-      this.statusOptions = response.data;
-    });
   },
   methods: {
-    /** 查询岗位列表 */
+    /** 查询课程实体类列表 */
     getList() {
       this.loading = true;
-      listPost(this.queryParams).then(response => {
-        this.postList = response.rows;
+      listCourse(this.queryParams).then(response => {
+        this.courseList = response.rows;
         this.total = response.total;
         this.loading = false;
       });
-    },
-    // 岗位状态字典翻译
-    statusFormat(row, column) {
-      return this.selectDictLabel(this.statusOptions, row.status);
     },
     // 取消按钮
     cancel() {
@@ -226,11 +206,18 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        postId: undefined,
-        postCode: undefined,
-        postName: undefined,
-        postSort: 0,
-        status: "0",
+        id: undefined,
+        courseName: undefined,
+        courseSn: undefined,
+        courseLogo: undefined,
+        courseTypeId: undefined,
+        courseIntor: undefined,
+        score: 100,
+        sort: 1,
+        createBy: undefined,
+        createTime: undefined,
+        updateBy: undefined,
+        updateTime: undefined,
         remark: undefined
       };
       this.resetForm("form");
@@ -247,32 +234,39 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.postId)
+      this.ids = selection.map(item => item.id)
       this.single = selection.length!=1
       this.multiple = !selection.length
+    },
+    getTypeList(){
+      getTypeList().then(response => {
+        this.typeOptions = response.typeList;
+      });
     },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
+      this.getTypeList();
       this.open = true;
-      this.title = "添加岗位";
+      this.title = "添加课程";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const postId = row.postId || this.ids
-      getPost(postId).then(response => {
+      this.getTypeList();
+      const id = row.id || this.ids
+      getCourse(id).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改岗位";
+        this.title = "修改课程实体类";
       });
     },
     /** 提交按钮 */
     submitForm: function() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          if (this.form.postId != undefined) {
-            updatePost(this.form).then(response => {
+          if (this.form.id != undefined) {
+            updateCourse(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("修改成功");
                 this.open = false;
@@ -282,7 +276,7 @@ export default {
               }
             });
           } else {
-            addPost(this.form).then(response => {
+            addCourse(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("新增成功");
                 this.open = false;
@@ -297,13 +291,13 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const postIds = row.postId || this.ids;
-      this.$confirm('是否确认删除岗位编号为"' + postIds + '"的数据项?', "警告", {
+      const ids = row.id || this.ids;
+      this.$confirm('是否确认删除课程实体类编号为"' + ids + '"的数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return delPost(postIds);
+          return delCourse(ids);
         }).then(() => {
           this.getList();
           this.msgSuccess("删除成功");
@@ -312,12 +306,12 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       const queryParams = this.queryParams;
-      this.$confirm('是否确认导出所有岗位数据项?', "警告", {
+      this.$confirm('是否确认导出所有课程实体类数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return exportPost(queryParams);
+          return exportCourse(queryParams);
         }).then(response => {
           this.download(response.msg);
         }).catch(function() {});
